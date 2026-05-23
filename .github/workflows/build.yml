@@ -11,7 +11,7 @@ jobs:
         uses: ArtemSBulgakov/buildozer-action@v1
         with:
           command: buildozer android bundle
-          workdir:.
+          workdir: .
           
       - name: Upload AAB
         uses: actions/upload-artifact@v4

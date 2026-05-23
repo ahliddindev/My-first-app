@@ -1,5 +1,5 @@
 name: Build APK
-on: [push]
+on: [push, pull_request]
 
 jobs:
   build:
@@ -16,6 +16,15 @@ jobs:
       - name: Build with Buildozer
         run: |
           export PATH=$PATH:$HOME/.local/bin
+          # Қабули худкори ҳамаи шартномаҳои Android SDK
+          mkdir -p ~/.android && touch ~/.android/repositories.cfg
+          yes | buildozer android debug || true
+          # Агар бори аввал хато диҳад, кӯшиш мекунем шартномаҳоро бо SDKManager тасдиқ кунем
+          if [ ! -d "$HOME/.buildozer/android/platform/android-sdk" ]; then
+            buildozer android debug --only-sdk-install || true
+          fi
+          yes | $HOME/.buildozer/android/platform/android-sdk/cmdline-tools/latest/bin/sdkmanager --licenses || true
+          # Оғози сохтмони асосӣ
           buildozer android debug
         env:
           ACCEPT_SDK_LICENSE: "yes"
@@ -23,5 +32,5 @@ jobs:
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: my-app-apk
+          name: my-first-app-apk
           path: bin/*.apk

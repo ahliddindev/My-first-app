@@ -1,4 +1,4 @@
-name: Build AAB
+name: Build APK
 on: [push]
 
 jobs:
@@ -6,7 +6,15 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+
       - name: Build with Buildozer
-        uses: NekoSekai/buildozer-action@v4
+        uses: ArtemSBulgakov/buildozer-action@v1
         with:
-          command: buildozer android bundle
+          buildozer_version: master
+          command: android debug
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: my-app-bundle
+          path: bin/*.apk

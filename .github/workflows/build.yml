@@ -1,36 +1,45 @@
 name: Build APK
-on: [push, pull_request]
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
 
 jobs:
   build:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-latest
+    
     steps:
-      - uses: actions/checkout@v4
-
-      - name: Install dependencies
-        run: |
-          sudo apt update
-          sudo apt install -y git zip unzip openjdk-17-jdk python3-pip autoconf libtool pkg-config zlib1g-dev libncurses5-dev libncursesw5-dev libtinfo5 cmake libffi-dev libssl-dev
-          pip3 install --user --upgrade Cython==0.29.33 buildozer
-
-      - name: Build with Buildozer
-        run: |
-          export PATH=$PATH:$HOME/.local/bin
-          # Қабули худкори ҳамаи шартномаҳои Android SDK
-          mkdir -p ~/.android && touch ~/.android/repositories.cfg
-          yes | buildozer android debug || true
-          # Агар бори аввал хато диҳад, кӯшиш мекунем шартномаҳоро бо SDKManager тасдиқ кунем
-          if [ ! -d "$HOME/.buildozer/android/platform/android-sdk" ]; then
-            buildozer android debug --only-sdk-install || true
-          fi
-          yes | $HOME/.buildozer/android/platform/android-sdk/cmdline-tools/latest/bin/sdkmanager --licenses || true
-          # Оғози сохтмони асосӣ
-          buildozer android debug
-        env:
-          ACCEPT_SDK_LICENSE: "yes"
-
-      - name: Upload APK
-        uses: actions/upload-artifact@v4
-        with:
-          name: my-first-app-apk
-          path: bin/*.apk
+    - uses: actions/checkout@v3
+    
+    - name: Set up Java 17
+      uses: actions/setup-java@v3
+      with:
+        java-version: '17'
+        distribution: 'temurin'
+    
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+    
+    - name: Install dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y git wget libncurses5 libffi-dev libssl-dev build-essential
+        pip install --upgrade pip setuptools wheel
+        pip install buildozer cython virtualenv
+    
+    - name: Build APK with Buildozer
+      run: |
+        cd ${{ github.workspace }}
+        buildozer android debug
+    
+    - name: Upload APK
+      if: success()
+      uses: actions/upload-artifact@v3
+      with:
+        name: myfirstapp-debug
+        path: bin/*.apk
+        retention-days: 30
